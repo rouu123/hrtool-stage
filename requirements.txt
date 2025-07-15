@@ -1,0 +1,6 @@
+pymupdf
+ollama
+python-dotenv
+sentence-transformers
+einops
+hf_xet

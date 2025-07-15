@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CV Matcher</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>CV Job Matcher</h1>
+        <form method="POST" enctype="multipart/form-data">
+
+    <input class="input-text" type="text" name="job_title" placeholder="Enter job title..." value="{{ job_title }}" class="input-title"><br><br>
+
+    <textarea class="input-text" name="job_description" rows="10" placeholder="Paste job description (optional)...">{{ job_text }}</textarea><br><br>        <input type="file" name="cv_files" id="cv_files" multiple required hidden onchange="updateFileLabel(this)">
+
+<!-- Custom label styled as button -->
+        <label for="cv_files" class="file-label">🖇️ Upload CVs</label>
+        <span id="file-count" class="file-count">No files selected</span>
+        <button class="input" type="submit">Match CVs</button>
+        </form>
+
+        {% if results %}
+<h2>📊 Ranked CVs</h2>
+<table class="cv-table">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Candidate Name</th>
+            <th>File Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Total Score</th>
+            <th>Raw Score</th>
+            <th>Required Match</th>
+            <th>Preferred Match</th>
+            <th>Experience</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for r in results %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ r.candidate_name }}</td>
+            <td><a href="{{ url_for('static', filename='uploads/' ~ r.name) }}" target="_blank">{{ r.name }}</a></td>
+            <td>{{ r.email }}</td>
+            <td>{{ r.phone }}</td>
+            <td><strong>{{ '%.1f' % (r.score * 100) }}%</strong></td>
+            <td>{{ '%.1f' % (r.raw_score * 100) }}%</td>
+            <td>{{ '%.1f' % (r.required * 100) }}%</td>
+            <td>{{ '%.1f' % (r.preferred * 100) }}%</td>
+            <td>{{ r.experience }} yrs</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
+</body>
+<script>
+function updateFileLabel(input) {
+    const fileCount = input.files.length;
+    const fileCountText = fileCount === 0 ? "No files selected" :
+                          fileCount === 1 ? "1 file selected" :
+                          `${fileCount} files selected`;
+    document.getElementById("file-count").innerText = fileCountText;
+}
+</script>
+</html>
