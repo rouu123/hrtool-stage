@@ -3,9 +3,9 @@ from werkzeug.utils import secure_filename
 import os
 from src.cv_parser import CVParser
 from src.job_parser import JobParser
-from src.matcher import calculate_similarity, calculate_category_matches, compute_final_score
+from src.matcher import calculate_similarity, calculate_score_skills, compute_final_score
 import numpy as np
-import shutil
+from src.odoo import get_job_description
 
 
 app = Flask(__name__)
@@ -18,15 +18,6 @@ cv_parser = CVParser()
 job_parser = JobParser()
 
 import requests
-
-def get_description_from_api(title):
-    try:
-        resp = requests.get("http://localhost:5001/api/job-description", params={"title": title})
-        if resp.status_code == 200:
-            return resp.json().get("description", "")
-    except Exception as e:
-        print(f"API call failed: {e}")
-    return ''
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -42,7 +33,7 @@ def index():
 
         # ---  Si la description est vide, on va chercher via titre ---
         if not job_text and job_title:
-            job_text = get_description_from_api(job_title)  # à définir plus tard
+            job_text = get_job_description(job_title)
             print(f"Fetched job description for '{job_title}': {job_text}")
 
         # Ensuite on parse comme avant
@@ -64,16 +55,13 @@ def index():
                 continue
 
             similarity = calculate_similarity(cv_data['skills_embedding'], job_data['skills_embedding'])
-            category_scores = calculate_category_matches(cv_data, job_data)
-            required_match = category_scores['required_skills']['score']
-            preferred_match = category_scores['preferred_skills']['score']
+            skills_score = calculate_score_skills(cv_data, job_data)
             experience = cv_data.get('total_experience', 0)
             required_experience = job_data.get('required_experience', 0)
 
             total_score = compute_final_score(
                 similarity,
-                required_match,
-                preferred_match,
+                skills_score,
                 experience,
                 required_experience
             )
@@ -81,9 +69,8 @@ def index():
             results.append({
     'name': filename,
     'score': total_score,
-    'raw_score': similarity,
-    'required': required_match,
-    'preferred': preferred_match,
+    'similarity': similarity,
+    'skills_score': skills_score,
     'experience': experience,
     'candidate_name': cv_data.get('name', 'N/A name'),
     'email': cv_data.get('email', 'no-email@example.com'),

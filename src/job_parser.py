@@ -19,8 +19,7 @@ class JobParser:
         Analyze this job description and extract the following as JSON:
         {{
             "job_title": str,
-            "required_skills": List[str],
-            "preferred_skills": List[str],
+            "wanted skills": List[str],
             "required_experience": float
         }}
 
@@ -29,7 +28,6 @@ class JobParser:
         2. For skills sections: DO NOT give me FULL SENTENCES INSTEAD EXTRACT THE SKILLS from the text and return them as a flat list.
          include ALL items (no limit in length of the list) but make it concise (NOT SENTENCES)
         example: for 'Experience with machine learning frameworks (e.g., scikit-learn, TensorFlow*)', return ["machine learning","scikit-learn", "TensorFlow"]
-        for both required and preferred skills
         3. For grouped skills like "web frameworks (Django, Flask)", return ["Django", "Flask"]
         4. required_experience should be a float with only one number after the decimal (e.g., 3.0 or 3.5)
         5. Extract ALL information available, ALL specific skills, the lists are not limited in length
@@ -71,9 +69,7 @@ class JobParser:
             text = " | ".join(skills)
             return self.embedder.encode(text).tolist()
 
-        job_data['skills_embedding'] = embed(job_data['required_skills'] + job_data['preferred_skills'])
-        job_data['required_skills_embedding'] = embed(job_data['required_skills'])
-        job_data['preferred_skills_embedding'] = embed(job_data['preferred_skills'])
+        job_data['wanted_skills_embedding'] = embed(job_data['wanted skills'])
 
         return job_data
 
@@ -81,10 +77,7 @@ class JobParser:
         """Return empty job data structure"""
         return {
             'job_title': '',
-            'required_skills': [],
-            'preferred_skills': [],
+            'wanted skills': [],
             'required_experience': 0.0,
-            'skills_embedding': None,
-            'required_skills_embedding': None,
-            'preferred_skills_embedding': None
+            'wanted_skills_embedding': None,
         }
